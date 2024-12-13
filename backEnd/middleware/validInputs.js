@@ -15,5 +15,19 @@ exports.user = (req,res,next) => {
         }
 }
 
+const sauceSchema = joi.object({
+    userId: joi.string().trim().required(), 
+    name: joi.string().trim().min(4).required(), 
+    description : joi.string().trim().required(),
+    manufacturer: joi.string().trim().required(), 
+    mainPepper: joi.string().trim().required(), 
+    imageUrl: joi.string().trim().required(), 
+    heat: joi.number().integer().min(1).max(10).required(), 
+})
+
+exports.sauce = (req, res, next) => {
+    
+}
+
 
 
