@@ -11,7 +11,7 @@ exports.user = (req,res,next) => {
     const{error, value} = userSchema.validate(req.body)
     if (error) {
 
-        // renvoie d'une erreur 422 : la réquête est reçue et comprise mais les données sont invalides
+        // renvoie d'une erreur 422 : la requête est reçue et comprise mais les données sont invalides
         res.status(422).json({error : "Erreur lors de la tentative de connection"})
        } 
         else {
