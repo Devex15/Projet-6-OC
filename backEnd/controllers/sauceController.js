@@ -72,15 +72,80 @@ exports.updateSauce = (req, res, next) =>{
 
                 // On update la sauce dans la base de données :
                 Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-                // On gère la réponse utilsateur er les erreurs :
+                // On gère la réponse utilisateur et les erreurs :
                 .then(() => res.status(200).json({ message: 'La sauce a été modifiée avec succcès.' }))
                 .catch(error => res.status(400).json({ error }));
             }
         }
 
 exports.deleteSauce = (req, res, next) =>{
+    // On cherche la sauce que le client veut supprimer
+    Sauce.findOne({ _id: req.params.id })
+        .then(sauce => {
+            //On cherche l'url de l'image de la sauce à supprimer et on supprime l'image (fs.unlink)
+            const imgName = sauce.imageUrl.split('/images/')[1];
+            fs.unlink(`images/${imgName}`, () => {
+                // On supprime la sauce liée à l'id proposé par l'utilisateur et on gère les erreurs. 
+                Sauce.deleteOne({ _id: req.params.id })
+                    .then(() => res.status(200).json({ message: 'La sauce a été supprimée avec succès.'}))
+                    .catch(error => res.status(400).json({ error }));
+            })
+        })
+        .catch(error => res.status(500).json({ error }));
+    };
 
-}
+    // Gestion des likes et des dislikes
+    exports.likeSauce = (req, res, next) => {
+        //On récupère les infos nécessaires au traitement de la delande de l'utilisateur ( userId ; like et l'id de la sauce)
+        const userId = req.body.userId;
+        const like = req.body.like;
+        const sauceId = req.params.id;
+        // On cherche la sauce concernée 
+        Sauce.findOne({ _id: sauceId })
+            .then(sauce => {
+                // On crée un objet JS avec les nouvelles valeurs à maj
+                const updatedValues = {
+                    usersLiked: sauce.usersLiked,
+                    usersDisliked: sauce.usersDisliked,
+                    likes: 0,
+                    dislikes: 0
+                }
+                // On gère les différents cas de figure
+                // sauce liké
+                switch (like) {
+                    case 1:  
+                    // On push l'id de l'utlisateur dans le tableau JS
+                        updatedValues.usersLiked.push(userId); 
+                        break;
+                    // sauce dislikée
+                    case -1:
+                    // On push l'id de l'utilisateur 
+                        updatedValues.usersDisliked.push(userId);
+                        break;
+                    // On annule le like ou le dislike
+                    case 0:  
+                        if (updatedValues.usersLiked.includes(userId)) {
+                            // si on annule le like
+                            const index = updatedValues.usersLiked.indexOf(userId);
+                            newValues.usersLiked.splice(index, 1);
+                        } else {
+                            // si on annule le dislike
+                            const index = updatedValues.usersDisliked.indexOf(userId);
+                            updatedValues.usersDisliked.splice(index, 1);
+                        }
+                        break;
+                };
+                // On détermine le nombre de like et de dislike avec la longueur de l'objet
+                updatedValues.likes = updatedValues.usersLiked.length;
+                updatedValues.dislikes = updatedValues.usersDisliked.length;
+                // On met à jour de la sauce avec les nouvelles valeurs
+                Sauce.updateOne({ _id: sauceId }, updatedValues )
+                    .then(() => res.status(200).json({ message: 'La sauce a été notée avec succès.' }))
+                    .catch(error => res.status(400).json({ error }))  
+            })
+            .catch(error => res.status(500).json({ error }));
+    }
+    
 
 
 
