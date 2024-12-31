@@ -72,7 +72,9 @@ exports.updateSauce = (req, res, next) =>{
 
                 // On update la sauce dans la base de données :
                 Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
+
                 // On gère la réponse utilisateur et les erreurs :
+
                 // On gère la réponse utilsateur er les erreurs :
                 .then(() => res.status(200).json({ message: 'La sauce a été modifiée avec succcès.' }))
                 .catch(error => res.status(400).json({ error }));
@@ -80,6 +82,7 @@ exports.updateSauce = (req, res, next) =>{
         }
 
 exports.deleteSauce = (req, res, next) =>{
+
     // On cherche la sauce que le client veut supprimer
     Sauce.findOne({ _id: req.params.id })
         .then(sauce => {
@@ -146,6 +149,7 @@ exports.deleteSauce = (req, res, next) =>{
             })
             .catch(error => res.status(500).json({ error }));
     }
+
 
 
 
