@@ -1,4 +1,4 @@
-const joi = require('@hapi/joi');
+const joi = require('joi');
 
 // On définie le schéma de validation du user avec joi 
 const userSchema = joi.object({

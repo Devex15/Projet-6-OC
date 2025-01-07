@@ -14,8 +14,8 @@ const storage = multer.diskStorage({
   destination: (req, file, callback) => {
     callback(null, 'images');
   },
+  // On s'assure que le fichier image aura un nom sans espace avec l'extension correcte
   filename: (req, file, callback) => {
-    // On s'assure que le fichier image aura un nom sans espace avec l'extension correcte
     const name = file.originalname.split(' ').join('_');
     const extension = MIME_TYPES[file.mimetype] || 'webp'; // Si le type MIME n'est pas dans la liste, on force 'webp'
     let timestamp = Math.floor(Date.now() / 1000);
