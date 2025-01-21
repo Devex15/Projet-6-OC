@@ -37,7 +37,7 @@ app.use(express.json());
  //===================================
 // Définition de la route afin de  servir des fichiers statiques (ex : images)
 app.use('/images', express.static(path.join(__dirname, 'images')));
-
+console.log('1');
 // Routes API
 app.use('/api/sauces', sauceRoutes);
 app.use('/api/auth', userRoutes);

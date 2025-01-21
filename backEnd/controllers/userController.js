@@ -4,7 +4,7 @@ const User = require('../models/modelUser'); // On importer le modèle modelsUse
 
 // On crée la fonction afin d'enregistrer un utilisateur
 exports.registerUser = async (req, res) => {
-    console.log('stringTest2')
+    console.log('stringTest2');
     try { 
         const { email, password } = req.body;
         console.log(email);

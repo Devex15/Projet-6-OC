@@ -3,7 +3,7 @@ const express = require('express');
 const routerUser = express.Router();
 const { registerUser, loginUser, updatePassword } = require('../controllers/userController');
 const { verifyToken } = require('../middleware/authMiddleware');
-
+console.log('2');
 // On définit les routes utilisateurs (Register et Login)
 routerUser.post('/signup', registerUser);
 

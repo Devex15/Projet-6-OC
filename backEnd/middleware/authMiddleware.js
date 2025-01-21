@@ -1,14 +1,30 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-    const token = req.headers['authorization'];
-    if (!token) return res.status(401).json({ message: 'Accès refusé' });
-    
+    // On vérifie la clé JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ message: 'Clé secrète JWT non configurée' });
+    }
+
+    // On vérifie le token dans l'en-tête Authorization
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Token manquant ou mal formé' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
     try {
-        const verified = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET);
-        req.user = verified;
-        next();
+        // On vérifie le token
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = verified; // Ajout des informations du token au req
+        next(); // Passage au middleware suivant
     } catch (err) {
-        res.status(400).json({ message: 'Le token est invalide' });
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Le token a expiré' });
+        } else if (err.name === 'JsonWebTokenError') {
+            return res.status(400).json({ message: 'Le token est invalide' });
+        }
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 };
