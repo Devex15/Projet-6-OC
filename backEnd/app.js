@@ -1,7 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-require('dotenv').config(); // On charge les variables d'environnement
+const session = require('express-session');
+require('dotenv').config(); // On charge les variables d'environnement.
+
 
 const sauceRoutes = require('./routes/sauces');
 const userRoutes = require('./routes/users');
@@ -32,16 +34,23 @@ app.use((req, res, next) => {
 // On utilise le middleware pour parser le corps des requêtes en JSON
 app.use(express.json());
 
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'monSuperSecret', // Clé secrète pour signer la session
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Mettre `true` si en HTTPS
+}));
+
 //====================================
 // DEFINITION DES ROUTES DU PROJET
  //===================================
 // Définition de la route afin de  servir des fichiers statiques (ex : images)
 app.use('/images', express.static(path.join(__dirname, 'images')));
-console.log('1');
+console.log('app1');
 // Routes API
-app.use('/api/sauces', sauceRoutes);
 app.use('/api/auth', userRoutes);
-
+app.use('/api/sauces', sauceRoutes);
+ 
 //=================================
 // GESTION DES ERREURS GLOBALES
 //===============================
@@ -50,5 +59,6 @@ app.use((err, req, res, next) => {
     console.error('Erreur :', err);
     res.status(err.status || 500).json({ message: err.message || 'Erreur serveur' });
 });
+
 
 module.exports = app;

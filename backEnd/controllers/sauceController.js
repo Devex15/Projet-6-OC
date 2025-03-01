@@ -3,6 +3,7 @@ const fs = require('fs');
 // On récupère toutes les sauces 
 
 exports.getAllSauces = (req,res, next) => {
+    console.log("routeSauce1")
     Sauce.find()  // Définis sans paramètre : va rechercher toutes les sauces
     // si une sauce est trouvée : .then , status 200 et on renvoie la sauce
     .then (sauces => res.status(200).json(sauces))
@@ -21,10 +22,10 @@ exports.getOneSauce = (req, res, next) => {
 exports.createSauce = (req, res, next) => {
 // On extrait la sauce proposée par l'utilisateur et on la convertit en JS ( JSON.pars () )
     const sauceNew = JSON.parse(req.body.sauce) ;
-
+console.log("createSauce1");
+console.log(sauceNew);
     // On supprime l'id généré par la base Mongodb afin d'éviter les conflits ultérieurs possibles 
     delete sauceNew._id;
-
     // On crée la nouvelle sauce dans la base de données grâce à new : 
     const sauce = new Sauce ({
         ... sauceNew, // ... : spread permet d'extraire les propriétés de l'objet sauce
