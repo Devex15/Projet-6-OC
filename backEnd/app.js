@@ -4,7 +4,6 @@ const path = require('path');
 const session = require('express-session');
 require('dotenv').config(); // On charge les variables d'environnement.
 
-
 const sauceRoutes = require('./routes/sauces');
 const userRoutes = require('./routes/users');
 
@@ -40,6 +39,17 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false } // Mettre `true` si en HTTPS
 }));
+
+app.use((req, res, next) => {
+    console.log('🔍 Requête reçue :', req.method, req.url);
+    console.log('🛠️ Headers:', req.headers);
+    if (req.headers.authorization) {
+        console.log('✅ Token reçu :', req.headers.authorization);
+    } else {
+        console.log('❌ Aucun token reçu');
+    }
+    next();
+});
 
 //====================================
 // DEFINITION DES ROUTES DU PROJET

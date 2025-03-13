@@ -78,6 +78,13 @@ exports.loginUser = async (req, res) => {
 console.log(token);
 req.session.token= token;
 
+/* res.status(200).json({
+    message: "Connexion réussie !",
+    token: token, // S'assurer que le token est bien retourné
+    userId: user._id
+}); */
+
+
         res.status(200).json({
             message: "Connexion réussie !",
             token: token,
