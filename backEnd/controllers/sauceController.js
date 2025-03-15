@@ -14,8 +14,11 @@ exports.getAllSauces = (req,res, next) => {
 exports.getOneSauce = (req, res, next) => {
     //.findOne : méthode mongoose qui permet de rechercher dans la databank un éléments pércis
     //  _id ; id générique , on recherche dans l'entête de la requête le id de la sauce
+    console.log(req.params.id)
     Sauce.findOne({_id: req.params.id}) 
-    .then(sauce => res.status(200).json(sauce)) // Si trouvé status 200 et on affiche
+    .then(sauce => {
+        console.log(sauce)
+        res.status(200).json(sauce)})  // Si trouvé status 200 et on affiche
     .catch(error => res.status(404).json({error})) // sinon statut 404 et on affiche l'erreur
 }
 
