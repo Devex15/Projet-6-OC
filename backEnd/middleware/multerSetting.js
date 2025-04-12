@@ -1,8 +1,10 @@
+/*
 const multer = require('multer');
 const sharp = require('sharp');
 const fs = require('fs');
+const path = require('path');
 
-// On configure les MIME types autorisés (extension ddes images : .jpg ; .webp ; ...)
+// Seuls les formats d'image autorisés
 const MIME_TYPES = {
   'image/jpg': 'jpg',
   'image/jpeg': 'jpg',
@@ -10,70 +12,108 @@ const MIME_TYPES = {
   'image/webp': 'webp',
 };
 
-// On configure la stockage des images par multer
+// Nom de fichier final → nom_sans_espace_timestamp.webp
+const generateFileName = (originalName) => {
+  const name = originalName.split(' ').join('_').split('.')[0];
+  const timestamp = Math.floor(Date.now() / 1000);
+  return `${name}_${timestamp}.webp`;
+};
+
+// Multer – stockage temporaire, l'image sera supprimée après conversion
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
-    // Dossier cible des fichiers
-    callback(null, 'images');
+    callback(null, 'images'); // dossier temporaire pour les originaux
   },
   filename: (req, file, callback) => {
-    const name = file.originalname.split(' ').join('_').split('.')[0]; // On supprime l'extension originale
-    const extension = MIME_TYPES[file.mimetype] || 'webp'; // On "force" le .webp si MIME inconnu
-    const timestamp = Math.floor(Date.now() / 1000);
-    callback(null, `${name}_${timestamp}.${extension}`);
-  },
+    const originalName = file.originalname;
+    const extension = MIME_TYPES[file.mimetype];
+    if (!extension) return callback(new Error("Type de fichier non autorisé"));
+    const tempName = `${path.parse(originalName).name}_${Date.now()}.${extension}`;
+    callback(null, tempName);
+  }
 });
 
-// Fonction de validation du fichier avec multer
 const fileFilter = (req, file, callback) => {
-  if (!MIME_TYPES[file.mimetype]) {
-    return callback(new Error('Le format de l image ne convient pas. '), false);
+  if (MIME_TYPES[file.mimetype]) {
+    callback(null, true);
+  } else {
+    callback(new Error('Seuls les formats JPG, JPEG, PNG et WEBP sont autorisés.'));
   }
-  callback(null, true);
 };
 
-// On initialise multer
-const upload = multer({ 
-  storage, 
-  fileFilter 
-}).single('image');
+const upload = multer({ storage, fileFilter }).single('image');
 
-// On définit un middleware afin de  convertir les images en webp
-const convertToWebp = (req, res, next) => {
-  if (!req.file) {
-    return res.status(400).send('Aucun fichier n a été téléchargé');
-  }
+// Conversion vers .webp + suppression de l'originale
+const convertToWebp = async (req, res, next) => {
+  if (!req.file) return next();
 
-  const uploadedFilePath = req.file.path;
-  const newFilePath = uploadedFilePath.replace(/\.(jpg|jpeg|png|webp)$/, '.webp');
+  const inputPath = req.file.path;
+  const outputName = generateFileName(req.file.originalname);
+  const outputPath = path.join('images', outputName);
 
-  sharp(uploadedFilePath)
-    .webp()
-    .toFile(newFilePath, (err, info) => {
-      if (err) {
-        console.error('Erreur lors de la conversion avec sharp :', err);
-        return res.status(500).send('Erreur de conversion en webp');
-      }
+  try {
+    await sharp(inputPath)
+      .webp({ quality: 80 })
+      .toFile(outputPath);
 
-      // On supprime l'ancien fichier après conversion
-      fs.unlink(uploadedFilePath, (err) => {
-        if (err) {
-          console.error('Erreur lors de la suppression du fichier original :', err);
-        }
-      });
-
-      // On met à jour les informations dans req.file
-      req.file.path = newFilePath;
-      req.file.filename = newFilePath.split('/').pop();
-
-      next();
+    // Supprimer le fichier original temporaire
+    fs.unlink(inputPath, (err) => {
+      if (err) console.warn("⚠️ Impossible de supprimer le fichier temporaire :", err.message);
     });
+
+    // Mise à jour de req.file pour le contrôleur
+    req.file.filename = outputName;
+    req.file.path = outputPath;
+
+    next();
+  } catch (error) {
+    console.error("🔴 Erreur lors de la conversion en WebP :", error);
+    return res.status(500).json({ message: "Erreur lors du traitement de l'image." });
+  }
 };
 
-// On crée un module qui regroupe les deux middleware upload et convertToWebp et l'exporte : 
-const multerSettings = {
+module.exports = {
   upload,
-  convertToWebp,
+  convertToWebp
+};
+*/
+
+const multer = require('multer');
+const path = require('path');
+
+// Seuls les formats d'image autorisés
+const MIME_TYPES = {
+  'image/jpg': 'jpg',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
 };
 
-module.exports = multerSettings;
+// Multer – stockage direct sans conversion
+const storage = multer.diskStorage({
+  destination: (req, file, callback) => {
+    callback(null, 'images'); // Dossier de stockage
+  },
+  filename: (req, file, callback) => {
+    const name = file.originalname.split(' ').join('_').split('.')[0];
+    const extension = MIME_TYPES[file.mimetype];
+    const timestamp = Math.floor(Date.now() / 1000);
+    const finalName = `${name}_${timestamp}.${extension}`;
+    callback(null, finalName);
+  }
+});
+
+const fileFilter = (req, file, callback) => {
+  if (MIME_TYPES[file.mimetype]) {
+    callback(null, true);
+  } else {
+    callback(new Error('Seuls les formats JPG, JPEG, PNG et WEBP sont autorisés.'));
+  }
+};
+
+const upload = multer({ storage, fileFilter }).single('image');
+
+module.exports = {
+  upload,
+};
+

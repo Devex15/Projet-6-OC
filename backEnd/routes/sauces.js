@@ -11,7 +11,7 @@ router.get('/', auth, sauceCtrl.getAllSauces);
 router.get('/:id', auth, sauceCtrl.getOneSauce);
 console.log("route1");
 router.post('/', auth, multer.upload, validate.sauce, sauceCtrl.createSauce);
-router.put('/:id', auth, multer.upload, multer.convertToWebp, validate.id, validate.sauce, sauceCtrl.updateSauce);
+router.put('/:id', auth, multer.upload, validate.id, validate.sauce, sauceCtrl.updateSauce);
 router.delete('/:id', auth, validate.id, sauceCtrl.deleteSauce);
 router.post('/:id/like', auth, validate.id, validate.like, sauceCtrl.likeSauce);
 

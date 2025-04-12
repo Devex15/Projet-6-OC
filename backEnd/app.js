@@ -40,7 +40,7 @@ app.use(session({
     cookie: { secure: false } // Mettre `true` si en HTTPS
 }));
 
-app.use((req, res, next) => {
+/*app.use((req, res, next) => {
     console.log('🔍 Requête reçue :', req.method, req.url);
     console.log('🛠️ Headers:', req.headers);
     if (req.headers.authorization) {
@@ -49,7 +49,7 @@ app.use((req, res, next) => {
         console.log('❌ Aucun token reçu');
     }
     next();
-});
+}); */
 
 //====================================
 // DEFINITION DES ROUTES DU PROJET
