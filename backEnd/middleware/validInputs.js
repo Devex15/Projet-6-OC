@@ -30,42 +30,9 @@ const sauceSchema = Joi.object({
     description: Joi.string().trim().required(),
     manufacturer: Joi.string().trim().required(),
     mainPepper: Joi.string().trim().required(),
-    //imageUrl: Joi.string().trim().required(),//
     imageUrl: Joi.string().uri().optional(),
     heat: Joi.number().integer().min(1).max(10).required()
 });
-
-/*exports.sauce = (req, res, next) => {
-    let sauce;
-    
-    console.log("🟢 sauce - Requête reçue. Fichier présent :", !!req.file);
-
-    if (req.file) {
-        try {
-            sauce = JSON.parse(req.file.buffer.toString());
-            console.log("🟢 sauce - Données extraites du fichier :", sauce);
-        } catch (e) {
-            console.error("🔴 sauce - Erreur JSON dans le fichier :", e.message);
-            return res.status(400).json({ error: "Format JSON invalide dans le fichier." });
-        }
-    } else {
-        sauce = req.body;
-        console.log("🟢 sauce - Données reçues (body) :", sauce);
-    }
-
-    const { error, value } = sauceSchema.validate(sauce);
-
-    if (error) {
-        console.error("🔴 sauce - Erreur de validation :", error.details.map((detail) => detail.message));
-        return res.status(422).json({
-            error: "Les données envoyées sont incorrectes.",
-            details: error.details.map((detail) => detail.message)
-        });
-    }
-
-    console.log("🟢 sauce - Données validées :", value);
-    next();
-}; */
 
 exports.sauce = (req, res, next) => {
     let sauce;
