@@ -95,7 +95,7 @@ exports.id = (req, res, next) => {
 
 // Schéma de validation des likes
 const likeSchema = Joi.object({
-    userId: Joi.string().trim().length(20).required(),
+    userId: Joi.string().trim().length(24).required(),
     like: Joi.number().valid(-1, 0, 1).required()
 });
 

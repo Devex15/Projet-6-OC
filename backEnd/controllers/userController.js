@@ -8,17 +8,7 @@ exports.registerUser = async (req, res) => {
     try { 
         const { email, password } = req.body;
         console.log(email);
-        // on vérifier que tous les champs sont fournis:
-       /* if (!email || !password) {
-            return res.status(400).json({ message: "Veuillez fournir une adresse e-mail, un mot de passe et un nom d'utilisateur." });
-        } */
-
-        // On vérifie si le nom d'utilisateur est déjà utilisé:
-        /*const existingUser = await User.findOne({ username: username });
-        if (existingUser) {
-           return res.status(403).json({ message: "Ce nom d'utilisateur est déjà utilisé." });
-        }*/
-
+        
         // Le mot de passe est hâché:
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -76,17 +66,11 @@ exports.loginUser = async (req, res) => {
             { expiresIn: '1h' }
         );
 console.log(token);
-req.session.token= token;
 
-/* res.status(200).json({
-    message: "Connexion réussie !",
-    token: token, // S'assurer que le token est bien retourné
-    userId: user._id
-}); */
-
+req.session.token= token; 
 
         res.status(200).json({
-            message: "Connexion réussie !",
+             message: "Connexion réussie !",
             token: token,
             userId: user._id
         });

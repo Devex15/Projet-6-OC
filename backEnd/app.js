@@ -18,9 +18,7 @@ mongoose.connect(process.env.MONGO_URL, {
 // on initialise l'application Express:
 const app = express();
 
-/**
- * MIDDLEWARES
- */
+
 // Configuration des en-têtes CORS
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', process.env.AUTHORIZED_ORIGIN || '*');
@@ -40,16 +38,6 @@ app.use(session({
     cookie: { secure: false } // Mettre `true` si en HTTPS
 }));
 
-/*app.use((req, res, next) => {
-    console.log('🔍 Requête reçue :', req.method, req.url);
-    console.log('🛠️ Headers:', req.headers);
-    if (req.headers.authorization) {
-        console.log('✅ Token reçu :', req.headers.authorization);
-    } else {
-        console.log('❌ Aucun token reçu');
-    }
-    next();
-}); */
 
 //====================================
 // DEFINITION DES ROUTES DU PROJET
