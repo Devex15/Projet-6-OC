@@ -1,222 +1,397 @@
-    const Sauce = require('../models/modelSauce');
-    const fs = require('fs');
+const Sauce = require('../models/modelSauce');
+const path = require('path');
+const fs = require('fs').promises;
     
-    // Récupère toutes les sauces
-    exports.getAllSauces = (req, res, next) => {
-        console.log("🟡 Entrée dans getAllSauces");
-        Sauce.find()
-            .then(sauces => {
-                console.log("🟢 Sauces récupérées :", sauces);
-                res.status(200).json(sauces);
-            })
-            .catch(error => {
-                console.error("🔴 Erreur dans getAllSauces :", error);
-                res.status(404).json({ error });
-            });
-    };
-    
-    // Récupère une sauce précise
-    exports.getOneSauce = (req, res, next) => {
-        console.log("🟡 Récupération de la sauce avec l'id :", req.params.id);
-        Sauce.findOne({ _id: req.params.id })
-            .then(sauce => {
-                console.log("🟢 Sauce trouvée :", sauce);
-                res.status(200).json(sauce);
-            })
-            .catch(error => {
-                console.error("🔴 Erreur lors de la récupération de la sauce :", error);
-                res.status(404).json({ error });
-            });
-    };
-    
-    // Création d'une nouvelle sauce
-    /* exports.createSauce = (req, res, next) => {
-        console.log("🟡 Entrée dans createSauce");
-        const sauceNew = JSON.parse(req.body.sauce);
-        console.log("🟡 Données de la sauce reçues :", sauceNew);
-        delete sauceNew._id;
-        const sauce = new Sauce({
-            ...sauceNew,
-            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
-            likes: 0,
-            dislikes: 0
+// Récupère toutes les sauces
+exports.getAllSauces = (req, res, next) => {
+    Sauce.find()
+        .then(sauces => {
+            /*console.log("🟢 Sauces récupérées :", sauces); */
+            res.status(200).json(sauces);
+        })
+        .catch(error => {
+            console.error("🔴 Erreur dans getAllSauces :", error);
+            res.status(500).json({ message: "Erreur serveur lors de votre demande" });
         });
-        console.log("🟡 Nouvelle sauce créée :", sauce);
-        sauce.save()
-            .then(() => {
-                console.log("🟢 Sauce enregistrée avec succès");
-                res.status(201).json({ message: "L'enregistrement de la sauce s'est fait avec succès." });
-            })
-            .catch(error => {
-                console.error("🔴 Erreur lors de l'enregistrement de la sauce :", error);
-                res.status(400).json({ error });
+};
+
+// Récupère une sauce précise
+exports.getOneSauce = (req, res, next) => {
+    /* console.log(
+        "Récupération de la sauce avec l'id :",
+         req.params.id
+     ); */
+
+    Sauce.findOne({ _id: req.params.id })
+        .then(sauce => {
+            // Vérifier si une sauce a été trouvée
+            if (!sauce) {
+                return res.status(404).json({
+                     message: "Sauce non trouvée"
+                });
+            }
+
+            // Si la sauce existe, la renvoyer au client
+            console.log("Sauce trouvée :", sauce);
+            res.status(200).json(sauce);
+        })
+        
+        .catch(error => {
+            console.error(
+                "Erreur lors de la récupération de la sauce :",
+                error
+            );
+
+            res.status(500).json({
+                message: "Erreur serveur"
             });
-    }; */
+        });
+    };
+ 
+// Creation d'une nouvelle sauce 
+exports.createSauce = async (req, res, next) => {
+    try {
+        // 1. Transformer le JSON reçu en objet JavaScript
+        const sauceData = JSON.parse(req.body.sauce);
     
-    exports.createSauce = (req, res, next) => {
-        try {
-          const sauceData = JSON.parse(req.body.sauce);
-      
-          // Suppression de l'ID fourni par le client (sécurité)
-          delete sauceData._id;
-      
-          const newSauce = new Sauce({
+        // 2. Supprimer l'identifiant fourni par le client
+        delete sauceData._id;
+    
+        // 3. Construire le document Mongoose
+        const newSauce = new Sauce({
             ...sauceData,
             imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
             likes: 0,
             dislikes: 0,
             usersLiked: [],
             usersDisliked: []
-          });
-      
-          newSauce.save()
-            .then(() => res.status(201).json({ message: 'Sauce créée avec succès.' }))
-            .catch(error => {
-              console.error("🔴 Erreur lors de l'enregistrement de la sauce :", error);
-              res.status(400).json({ error });
-            });
-        } catch (error) {
-          console.error("🔴 Erreur dans createSauce :", error);
-          res.status(400).json({ message: "Requête invalide" });
-        }
-      };
-      
-    // Mise à jour d'une sauce
-     exports.updateSauce = (req, res, next) => {
-        if (req.file) {
-            console.log("🟡 Mise à jour avec une nouvelle image pour la sauce :", req.params.id);
-            Sauce.findOne({ _id: req.params.id })
-                .then(sauce => {
-                    console.log("🟡 Sauce à mettre à jour :", sauce);
-                    const imgName = sauce.imageUrl.split('/images/')[1];
-                    console.log(imgName);
-                    console.log(sauce);
-                    fs.unlink(`images/${imgName}`, () => {
-                        console.log("🟡 Image supprimée :", imgName);
-                        const sauceUpdated = {
-                            ...JSON.parse(req.body.sauce),
-                            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-                        };
-                        Sauce.updateOne({ _id: req.params.id }, { ...sauceUpdated, _id: req.params.id })
-                            .then(() => {
-                                console.log("🟢 Sauce mise à jour avec nouvelle image");
-                                res.status(200).json({ message: 'Sauce modifiée!' });
-                            })
-                            .catch(error => {
-                                console.error("🔴 Erreur lors de la mise à jour de la sauce :", error);
-                                res.status(400).json({ error });
-                            });
-                    });
-                })
-                .catch(error => {
-                    console.error("🔴 Erreur lors de la recherche de la sauce :", error);
-                    res.status(500).json({ error });
-                });
-        } else {
-            console.log("🟡 Mise à jour sans nouvelle image pour la sauce :", req.params.id);
-            const sauceObject = { ...req.body };
-            Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-                .then(() => {
-                    console.log("🟢 Sauce mise à jour sans nouvelle image");
-                    res.status(200).json({ message: 'La sauce a été modifiée avec succès.' });
-                })
-                .catch(error => {
-                    console.error("🔴 Erreur lors de la mise à jour de la sauce :", error);
-                    res.status(400).json({ error });
-                });
-        }
-    }; 
+        });
+    
+        // 4. Enregistrer la sauce dans MongoDB
+        await newSauce.save();
+    
+        // 5. Envoyer la réponse après la réussite de l'enregistrement
+        res.status(201).json({
+            message: 'Sauce créée avec succès.'
+        });
+    
+    } catch (error) {
+        console.error("Erreur dans createSauce :", error);
+    
+        res.status(400).json({
+            message: "Requête invalide"
+        });
+    }
+};
+    
 
-    
-    // Suppression d'une sauce
-    exports.deleteSauce = (req, res, next) => {
-        console.log("🟡 Suppression de la sauce :", req.params.id);
-        Sauce.findOne({ _id: req.params.id })
-            .then(sauce => {
-                console.log("🟡 Sauce à supprimer :", sauce);
-                const imgName = sauce.imageUrl.split('/images/')[1];
-                fs.unlink(`images/${imgName}`, () => {
-                    console.log("🟡 Image supprimée :", imgName);
-                    Sauce.deleteOne({ _id: req.params.id })
-                        .then(() => {
-                            console.log("🟢 Sauce supprimée avec succès");
-                            res.status(200).json({ message: 'La sauce a été supprimée avec succès.' });
-                        })
-                        .catch(error => {
-                            console.error("🔴 Erreur lors de la suppression de la sauce :", error);
-                            res.status(400).json({ error });
-                        });
-                });
-            })
-            .catch(error => {
-                console.error("🔴 Erreur lors de la recherche de la sauce pour suppression :", error);
-                res.status(500).json({ error });
+// Mise à jour d'une sauce
+exports.updateSauce = async (req, res, next) => {
+    try {
+        // 1. Recherche de la sauce existante
+        const sauce = await Sauce.findOne({ _id: req.params.id });
+        console.log("Utilisateur authentifié :", req.user);
+
+        if (!sauce) {
+            return res.status(404).json({
+                message: 'Sauce non trouvée.'
             });
-    };
-    
-    // Gestion des likes et dislikes
-    exports.likeSauce = (req, res, next) => {
-        const userId = req.body.userId;
-        const like = req.body.like;
-        const sauceId = req.params.id;
-        console.log(`🟡 Traitement du like pour la sauce ${sauceId} par l'utilisateur ${userId} avec like = ${like}`);
-    
-        Sauce.findOne({ _id: sauceId })
-            .then(sauce => {
-                console.log("🟡 Sauce trouvée pour le like :", sauce);
-                const updatedValues = {
-                    usersLiked: [...sauce.usersLiked],
-                    usersDisliked: [...sauce.usersDisliked],
-                    likes: 0,
-                    dislikes: 0
-                };
-    
-                switch (like) {
-                    case 1:
-                        if (!updatedValues.usersLiked.includes(userId)) {
-                            updatedValues.usersLiked.push(userId);
-                            console.log("🟢 Utilisateur ajouté aux likes");
-                        }
-                        break;
-                    case -1:
-                        if (!updatedValues.usersDisliked.includes(userId)) {
-                            updatedValues.usersDisliked.push(userId);
-                            console.log("🟢 Utilisateur ajouté aux dislikes");
-                        }
-                        break;
-                    case 0:
-                        if (updatedValues.usersLiked.includes(userId)) {
-                            const index = updatedValues.usersLiked.indexOf(userId);
-                            updatedValues.usersLiked.splice(index, 1);
-                            console.log("🟡 Utilisateur retiré des likes");
-                        } else if (updatedValues.usersDisliked.includes(userId)) {
-                            const index = updatedValues.usersDisliked.indexOf(userId);
-                            updatedValues.usersDisliked.splice(index, 1);
-                            console.log("🟡 Utilisateur retiré des dislikes");
-                        }
-                        break;
-                    default:
-                        console.error("🔴 Action non valide");
-                        return res.status(400).json({ message: "Action non valide." });
+        }
+
+        // 2. Vérification que l'utilisateur est bien propriétaire de la sauce
+        if (sauce.userId.toString() !== req.user.userId) {
+            return res.status(403).json({
+                message: 'Requête non autorisée.'
+            });
+        }
+
+        let sauceObject = {};
+
+        // 3. Si une nouvelle image a été envoyée
+        if (req.file) {
+
+            console.log(
+                "🟡 Mise à jour avec une nouvelle image pour la sauce :",
+                req.params.id
+            );
+
+            // Récupération du nom de l'ancienne image
+            const imgName = sauce.imageUrl.split('/images/')[1];
+
+            // Préparation des nouvelles données
+            sauceObject = {
+                ...JSON.parse(req.body.sauce),
+                imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+            };
+
+            // On empêche le client de modifier ces propriétés
+            delete sauceObject._id;
+            delete sauceObject.userId;
+
+            // Mise à jour de MongoDB
+            await Sauce.updateOne(
+                { _id: req.params.id },
+                {
+                    ...sauceObject,
+                    _id: req.params.id
                 }
-    
-                updatedValues.likes = updatedValues.usersLiked.length;
-                updatedValues.dislikes = updatedValues.usersDisliked.length;
-                console.log("🟡 Mise à jour des compteurs : likes =", updatedValues.likes, ", dislikes =", updatedValues.dislikes);
-    
-                Sauce.updateOne({ _id: sauceId }, updatedValues)
-                    .then(() => {
-                        console.log("🟢 Sauce notée avec succès");
-                        res.status(200).json({ message: 'La sauce a été notée avec succès.' });
-                    })
-                    .catch(error => {
-                        console.error("🔴 Erreur lors de la mise à jour du like :", error);
-                        res.status(400).json({ error });
-                    });
-            })
-            .catch(error => {
-                console.error("🔴 Erreur lors de la recherche de la sauce pour le like :", error);
-                res.status(500).json({ error });
+            );
+
+            // Une fois MongoDB mise à jour,
+            // on supprime l'ancienne image
+            try {
+                const imagePath = path.join(__dirname, '../images', imgName);
+
+                await fs.unlink(imagePath);
+            
+                console.log(
+                    "🟢 Ancienne image supprimée :",
+                    imgName
+                );
+
+            } catch (unlinkError) {
+                console.error(
+                    "🔴 Erreur lors de la suppression de l'ancienne image :",
+                    unlinkError
+                );
+            }
+
+        } else {
+
+            // 4. Mise à jour sans nouvelle image
+            console.log(
+                "🟡 Mise à jour sans nouvelle image pour la sauce :",
+                req.params.id
+            );
+
+            sauceObject = {
+                ...req.body
+            };
+
+            // Le client ne peut pas modifier ces propriétés
+            delete sauceObject._id;
+            delete sauceObject.userId;
+            delete sauceObject.imageUrl;
+
+            // Mise à jour de MongoDB
+            await Sauce.updateOne(
+                { _id: req.params.id },
+                {
+                    ...sauceObject,
+                    _id: req.params.id
+                }
+            );
+        }
+
+        // 5. Réponse envoyée au client
+        console.log("🟢 Sauce mise à jour avec succès !");
+
+        return res.status(200).json({
+            message: 'La sauce a été modifiée avec succès.'
+        });
+
+    } catch (error) {
+
+        console.error(
+            "🔴 Erreur globale dans updateSauce :",
+            error
+        );
+
+        return res.status(500).json({
+            message:"Sauce non modifiée. Veuillez réessayer."
+        });
+    }
+};
+
+// Suppression d'une sauce 
+exports.deleteSauce = async (req, res, next) => {
+
+    console.log("🟡 Tentative de suppression de la sauce :", req.params.id);
+
+    try {
+        // 1. Trouver la sauce
+        const sauce = await Sauce.findOne({ _id: req.params.id });
+
+        // 2. Vérifier que la sauce existe
+        if (!sauce) {
+            return res.status(404).json({
+                message: 'Sauce non trouvée.'
             });
-    };
-    
+        }
+
+        // 3. Vérifier que l'utilisateur est bien propriétaire
+        if (sauce.userId.toString() !== req.user.userId) {
+            return res.status(403).json({
+                message: 'Action impossible.'
+            });
+        }
+
+        // 4. Extraire le nom de l'image
+        const imgName = sauce.imageUrl.split('/images/')[1];
+
+        // 5. Construire le chemin absolu de l'image
+        const imagePath = path.join(__dirname, '../images', imgName);
+
+        // 6. Supprimer l'image du serveur
+        await fs.unlink(imagePath);
+
+        console.log("🟢 Image supprimée :", imgName);
+
+        // 7. Supprimer la sauce de MongoDB
+        await Sauce.deleteOne({ _id: req.params.id });
+
+        console.log("🟢 Sauce supprimée avec succès");
+
+        return res.status(200).json({
+            message: 'La sauce a été supprimée avec succès.'
+        });
+
+    } catch (error) {
+        console.error("🔴 Erreur lors de la suppression :", error);
+
+        return res.status(500).json({
+            message: "La sauce n'a pas été supprimée."
+        });
+    }
+};
+ 
+// Gestion des likes et dislikes
+exports.likeSauce = async (req, res) => {
+
+    // 1. Récupération de l'utilisateur authentifié
+    // L'identifiant provient du JWT vérifié par le middleware.
+    /* userId évalue req.user : S'il est présent const userId = req.user.userID ( userId qui vient du JWT)
+      si pas de req.user, le JS s'arrête */
+    const userId = req.user && req.user.userId;
+
+    // 2. Récupération des données de la requête
+    const like = req.body.like;
+    const sauceId = req.params.id;
+
+    // 3. Vérification de l'identifiant utilisateur
+    if (typeof userId !== 'string' || !userId) {
+        return res.status(401).json({
+            message: "Utilisateur non authentifié."
+        });
+    }
+
+    // 4. Vérification de la valeur du vote
+    if (!Number.isInteger(like) || ![-1, 0, 1].includes(like)) {
+        return res.status(400).json({
+            message: "Action non valide."
+        });
+    }
+
+    try {
+        // 5. Recherche de la sauce dans MongoDB
+        const sauce = await Sauce.findById(sauceId);
+
+        // 6. Vérification de l'existence de la sauce
+        if (!sauce) {
+            return res.status(404).json({
+                message: "Sauce non trouvée."
+            });
+        }
+
+        // 7. Copie des tableaux et conversion des identifiants en chaînes
+        const usersLiked = (sauce.usersLiked || [])
+            .map(id => String(id));
+
+        const usersDisliked = (sauce.usersDisliked || [])
+            .map(id => String(id));
+
+        // 8. Application du vote
+        switch (like) {
+
+            case 1:
+                // L'utilisateur aime la sauce.
+                // On retire d'abord son éventuel dislike.
+                const indexDislike = usersDisliked.indexOf(userId);
+
+                if (indexDislike !== -1) {
+                    usersDisliked.splice(indexDislike, 1);
+                }
+
+                // On ajoute le like si l'utilisateur ne l'a pas déjà donné.
+                if (!usersLiked.includes(userId)) {
+                    usersLiked.push(userId);
+                }
+                break;
+
+            case -1:
+                // L'utilisateur n'aime pas la sauce.
+                // On retire d'abord son éventuel like.
+                const indexLike = usersLiked.indexOf(userId);
+
+                if (indexLike !== -1) {
+                    usersLiked.splice(indexLike, 1);
+                }
+
+                // On ajoute le dislike si nécessaire.
+                if (!usersDisliked.includes(userId)) {
+                    usersDisliked.push(userId);
+                }
+                break;
+
+            case 0:
+                // L'utilisateur annule son vote.
+                // On le retire des deux tableaux.
+                const indexLikeToRemove = usersLiked.indexOf(userId);
+
+                if (indexLikeToRemove !== -1) {
+                    usersLiked.splice(indexLikeToRemove, 1);
+                }
+
+                const indexDislikeToRemove = usersDisliked.indexOf(userId);
+
+                if (indexDislikeToRemove !== -1) {
+                    usersDisliked.splice(indexDislikeToRemove, 1);
+                }
+                break;
+        }
+
+        // 9. Recalcul des compteurs à partir des tableaux
+        const updatedValues = {
+            usersLiked,
+            usersDisliked,
+            likes: usersLiked.length,
+            dislikes: usersDisliked.length
+        };
+
+        // 10. Enregistrement des modifications dans MongoDB
+        const result = await Sauce.updateOne(
+            { _id: sauceId },
+            { $set: updatedValues }
+        );
+
+        // 11. Vérification de la mise à jour
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                message: "Sauce non trouvée."
+            });
+        }
+
+        // 12. Confirmation au client
+        return res.status(200).json({
+            message: "La sauce a été notée avec succès."
+        });
+
+    } catch (error) {
+        console.error(
+            "Erreur lors du traitement du vote :",
+            error
+        );
+
+        // Identifiant de sauce incompatible avec le format attendu
+        if (error.name === 'CastError') {
+            return res.status(400).json({
+                message: "Identifiant de sauce invalide."
+            });
+        }
+
+        // Autre erreur interne
+        return res.status(500).json({
+            message: "Une erreur interne est survenue."
+        });
+    }
+};

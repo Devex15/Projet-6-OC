@@ -4,7 +4,6 @@ const User = require('../models/modelUser'); // On importer le modèle modelsUse
 
 // On crée la fonction afin d'enregistrer un utilisateur
 exports.registerUser = async (req, res) => {
-    console.log('stringTest2');
     try { 
         const { email, password } = req.body;
         console.log(email);
@@ -22,18 +21,19 @@ exports.registerUser = async (req, res) => {
         await newUser.save();
 
         res.status(201).json({ message: "Utilisateur enregistré avec succès !" });
-    } catch (error) {
-        console.error("Erreur lors de l'enregistrement de l'utilisateur :", error);
-        res.status(500).json({ message: "Une erreur s'est produite. Veuillez réessayer plus tard." });
-    }
-};
+   
+        } catch (error) {
+            console.error("Erreur lors de l'enregistrement de l'utilisateur :", error);
+            res.status(500).json({ message: "Une erreur s'est produite. Veuillez réessayer plus tard." });
+        }
+    };
 
 // On crée une fonction pour connecter un utilisateur:
 exports.loginUser = async (req, res) => {
     try {
-        console.log('test login1')
+        /*console.log('test login1') */
         const { email, password } = req.body;
-        console.log('test login2')
+        /*console.log('test login2')*/
         // On vérifie que les champs nécessaires sont fournis:
         if (!email || !password) {
             return res.status(400).json({ message: "Veuillez fournir une adresse e-mail et un mot de passe." });
