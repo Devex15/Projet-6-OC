@@ -31,14 +31,11 @@ exports.registerUser = async (req, res) => {
 // On crée une fonction pour connecter un utilisateur:
 exports.loginUser = async (req, res) => {
     try {
-        /*console.log('test login1') */
         const { email, password } = req.body;
-        /*console.log('test login2')*/
         // On vérifie que les champs nécessaires sont fournis:
         if (!email || !password) {
             return res.status(400).json({ message: "Veuillez fournir une adresse e-mail et un mot de passe." });
         }
-        console.log('test login4')
         // On définit une régex pour valider l'adresse e-mail
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -62,7 +59,7 @@ exports.loginUser = async (req, res) => {
         // On génère un jeton JWT:
         const token = jwt.sign(
             { userId: user._id },
-            process.env.JWT_SECRET, // La clé secrète est cachée.
+            process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 console.log(token);
