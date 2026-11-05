@@ -20,7 +20,7 @@ module.exports = (req, res, next) => {
         
         // 4. Protection contre l'usurpation d'identité
         if (req.body.userId && req.body.userId !== verified.userId)  {
-            return res.status(403).json({ message: 'Requête non autorisée (ID utilisateur non valide)' });
+            return res.status(403).json({ message: 'Impossible de satisfaire la requête' });
         }
 
         // 5. On injecte les infos du user dans l'objet req pour les routes suivantes

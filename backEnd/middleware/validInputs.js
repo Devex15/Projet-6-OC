@@ -46,7 +46,7 @@ exports.sauce = (req, res, next) => {
             console.log("🟢 sauce - Données extraites du body :", sauce);
         } catch (e) {
             console.error("🔴 sauce - Erreur JSON dans req.body.sauce :", e.message);
-            return res.status(400).json({ error: "Format JSON invalide dans le body." });
+            return res.status(400).json({ error: "Les données envoyées sont incorrectes." });
         }
 
         // **Ajout du champ imageUrl**
@@ -84,7 +84,7 @@ exports.id = (req, res, next) => {
     if (error) {
         console.error("🔴 id - ID invalide :", error.details.map((detail) => detail.message));
         return res.status(422).json({
-            error: "L'id de la sauce est invalide.",
+            error: "La sauce ne peut pas être trouvée.",
             details: error.details.map((detail) => detail.message)
         });
     }
@@ -107,7 +107,7 @@ exports.like = (req, res, next) => {
     if (error) {
         console.error("🔴 like - Erreur de validation :", error.details.map((detail) => detail.message));
         return res.status(422).json({
-            error: "Les données saisies sont invalides.",
+            error: "Les données saisies sont incorrectes.",
             details: error.details.map((detail) => detail.message)
         });
     }
