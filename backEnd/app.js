@@ -4,6 +4,11 @@ const path = require('path');
 const session = require('express-session');
 require('dotenv').config(); // On charge les variables d'environnement.
 
+// Vérification de la configuration CORS
+if (!process.env.AUTHORIZED_ORIGIN) {
+    throw new Error('AUTHORIZED_ORIGIN non définie');
+}
+
 const sauceRoutes = require('./routes/sauces');
 const userRoutes = require('./routes/users');
 
@@ -21,7 +26,7 @@ const app = express();
 
 // Configuration des en-têtes CORS
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', process.env.AUTHORIZED_ORIGIN || '*');
+    res.setHeader('Access-Control-Allow-Origin', process.env.AUTHORIZED_ORIGIN);
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
