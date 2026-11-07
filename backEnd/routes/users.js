@@ -1,11 +1,14 @@
-// Require sur express et autre dépendances 
 const express = require('express');
 const routerUser = express.Router();
-const { registerUser, loginUser, updatePassword } = require('../controllers/userController');
 
-// On définit les routes utilisateurs (Register et Login)
-routerUser.post('/signup', registerUser);
+const { registerUser, loginUser } = require('../controllers/userController');
+const userValidation = require('../middleware/validInputs');
 
-routerUser.post('/login', loginUser);
+// Inscription : validation puis contrôleur
+routerUser.post('/signup', userValidation.user, registerUser);
+
+// Connexion : validation puis contrôleur
+routerUser.post('/login', userValidation.user, loginUser);
 
 module.exports = routerUser;
+

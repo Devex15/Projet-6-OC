@@ -1,78 +1,108 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/modelUser'); // On importer le modèle modelsUsers
+const User = require('../models/modelUser');
 
-// On crée la fonction afin d'enregistrer un utilisateur
+// ========================================
+// INSCRIPTION D'UN UTILISATEUR
+// ========================================
+
 exports.registerUser = async (req, res) => {
-    try { 
+    try {
+
+        // Récupération des données validées par Joi
         const { email, password } = req.body;
-        console.log(email);
-        
-        // Le mot de passe est hâché:
+
+        // Le mot de passe est haché
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // On crée un nouvel utilisateur:
+        // Création d'un nouvel utilisateur
         const newUser = new User({
             email: email,
             password: hashedPassword
         });
 
-        // On sauvegarde l'utilisateur dans la base de données:
+        // Sauvegarde de l'utilisateur dans MongoDB
         await newUser.save();
 
-        res.status(201).json({ message: "Utilisateur enregistré avec succès !" });
-   
-        } catch (error) {
-            console.error("Erreur lors de l'enregistrement de l'utilisateur :", error);
-            res.status(500).json({ message: "Une erreur s'est produite. Veuillez réessayer plus tard." });
-        }
-    };
+        return res.status(201).json({
+            message: "Utilisateur enregistré avec succès !"
+        });
 
-// On crée une fonction pour connecter un utilisateur:
+    } catch (error) {
+
+        // Gestion d'une adresse e-mail déjà utilisée
+        if (error.code === 11000) {
+            return res.status(409).json({
+                message: "Cette adresse e-mail est déjà utilisée."
+            });
+        }
+
+        console.error("Erreur lors de l'enregistrement de l'utilisateur :", error);
+
+        return res.status(500).json({
+            message: "Une erreur s'est produite. Veuillez réessayer plus tard."
+        });
+    }
+};
+
+
+// ========================================
+// CONNEXION D'UN UTILISATEUR
+// ========================================
+
 exports.loginUser = async (req, res) => {
     try {
+
+        // Récupération des données validées par Joi
         const { email, password } = req.body;
-        // On vérifie que les champs nécessaires sont fournis:
-        if (!email || !password) {
-            return res.status(400).json({ message: "Veuillez fournir une adresse e-mail et un mot de passe." });
-        }
-        // On définit une régex pour valider l'adresse e-mail
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        // On vérifie si l'adresse e-mail respecte la régex
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: "Veuillez fournir une adresse e-mail valide." });
-        }
-
-        // On recherche l'utilisateur par son adresse e-mail:
+        // Recherche de l'utilisateur par son adresse e-mail
         const user = await User.findOne({ email: email });
+
         if (!user) {
-            return res.status(401).json({ message: "Désolé, la combinaison identifiant et mot de passe est incorrecte." });
+            return res.status(401).json({
+                message: "Identifiant ou mot de passe incorrect."
+            });
         }
 
-        // On compare le mot de passe avec celui enregistré (haché):
+        // Comparaison du mot de passe avec celui enregistré (haché)
         const isPasswordValid = await bcrypt.compare(password, user.password);
+
         if (!isPasswordValid) {
-            return res.status(401).json({ message: "Désolé, la combinaison identifiant et mot de passe est incorrecte." });
+            return res.status(401).json({
+                message: "Identifiant ou mot de passe incorrect."
+            });
         }
 
-        // On génère un jeton JWT:
+        // Vérification de la présence du secret JWT
+        if (!process.env.JWT_SECRET) {
+            console.error("JWT_SECRET non définie.");
+
+            return res.status(500).json({
+                message: "Erreur de configuration du serveur."
+            });
+        }
+
+        // Génération du jeton JWT
         const token = jwt.sign(
-            { userId: user._id },
+            { userId: user._id.toString() },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
-console.log(token);
 
-req.session.token= token; 
-
-        res.status(200).json({
-             message: "Connexion réussie !",
+        // Transmission du JWT au frontend Angular
+        return res.status(200).json({
+            message: "Connexion réussie !",
             token: token,
             userId: user._id
         });
+
     } catch (error) {
+
         console.error("Erreur lors de la connexion :", error);
-        res.status(500).json({ message: "Une erreur s'est produite. Veuillez réessayer plus tard." });
+
+        return res.status(500).json({
+            message: "Une erreur s'est produite. Veuillez réessayer plus tard."
+        });
     }
 };

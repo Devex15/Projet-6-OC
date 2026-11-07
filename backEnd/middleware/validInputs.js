@@ -1,39 +1,33 @@
+// validate inputs users 
+
 const Joi = require('joi');
 
 // Schéma de validation du user
 const userSchema = Joi.object({
-    email: Joi.string().trim().email().required(),
-    password: Joi.string().trim().min(4).required()
+    email: Joi.string().trim().lowercase().email().required(),
+    password: Joi.string().required()  // A vérifier sur les requirements si les espaces 
+    // sont acceptés sur le password
 });
 
+// Middleware de validation
 exports.user = (req, res, next) => {
-    console.log("🟢 user - Données reçues :", req.body);
 
     const { error, value } = userSchema.validate(req.body);
-    
+
     if (error) {
-        console.error("🔴 user - Erreur de validation :", error.details.map((detail) => detail.message));
         return res.status(422).json({
-            error: "Erreur lors de la tentative de connexion.",
-            details: error.details.map((detail) => detail.message)
+            error: "Erreur lors de la validation des données.",
+            details: error.details.map(detail => detail.message)
         });
     }
 
-    console.log("🟢 user - Données validées :", value);
+    // Transmission des données validées et normalisées
+    req.body = value;
+
     next();
-};
+}
 
-// Schéma de validation des données de la sauce
-const sauceSchema = Joi.object({
-    userId: Joi.string().trim().length(24).required(),
-    name: Joi.string().trim().min(4).max(10).required(),
-    description: Joi.string().trim().required(),
-    manufacturer: Joi.string().trim().required(),
-    mainPepper: Joi.string().trim().required(),
-    imageUrl: Joi.string().uri().optional(),
-    heat: Joi.number().integer().min(1).max(10).required()
-});
-
+// Schémé de validation des sauces
 exports.sauce = (req, res, next) => {
     let sauce;
     

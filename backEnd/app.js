@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const session = require('express-session');
 require('dotenv').config(); // On charge les variables d'environnement.
 
 // Vérification de la configuration CORS
@@ -35,13 +34,6 @@ app.use((req, res, next) => {
 
 // On utilise le middleware pour parser le corps des requêtes en JSON
 app.use(express.json());
-
-app.use(session({
-    secret: process.env.SESSION_SECRET, // Clé secrète pour signer la session
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: true } // Mettre `true` si en HTTPS
-}));
 
 
 //====================================
