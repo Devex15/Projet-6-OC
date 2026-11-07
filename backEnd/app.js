@@ -37,10 +37,10 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'monSuperSecret', // Clé secrète pour signer la session
+    secret: process.env.SESSION_SECRET, // Clé secrète pour signer la session
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Mettre `true` si en HTTPS
+    cookie: { secure: true } // Mettre `true` si en HTTPS
 }));
 
 
@@ -49,7 +49,7 @@ app.use(session({
  //===================================
 // Définition de la route afin de  servir des fichiers statiques (ex : images)
 app.use('/images', express.static(path.join(__dirname, 'images')));
-console.log('app1');
+
 // Routes API
 app.use('/api/auth', userRoutes);
 app.use('/api/sauces', sauceRoutes);
@@ -60,7 +60,7 @@ app.use('/api/sauces', sauceRoutes);
 
 app.use((err, req, res, next) => {
     console.error('Erreur :', err);
-    res.status(err.status || 500).json({ message: err.message || 'Erreur serveur' });
+    res.status(err.status || 500).json({ message:'Erreur serveur' });
 });
 
 
