@@ -27,7 +27,17 @@ exports.user = (req, res, next) => {
     next();
 }
 
-// Schémé de validation des sauces
+// Schéma de validation des sauces
+const sauceSchema = Joi.object({
+    userId: Joi.string().trim().length(24).required(),
+    name: Joi.string().trim().min(4).max(10).required(),
+    description: Joi.string().trim().required(),
+    manufacturer: Joi.string().trim().required(),
+    mainPepper: Joi.string().trim().required(),
+    imageUrl: Joi.string().uri().optional(),
+    heat: Joi.number().integer().min(1).max(10).required()
+});
+
 exports.sauce = (req, res, next) => {
     let sauce;
     
