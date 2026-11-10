@@ -6,13 +6,16 @@ const multer = require('../middleware/multerSetting');
 const sauceCtrl = require('../controllers/sauceController');
 const validate = require('../middleware/validInputs');
 
-
 router.get('/', auth, sauceCtrl.getAllSauces);
-router.get('/:id', auth, sauceCtrl.getOneSauce);
+router.get('/:id', auth, validate.id, sauceCtrl.getOneSauce);
 router.post('/', auth, multer.upload, validate.sauce, sauceCtrl.createSauce);
-router.put('/:id', auth, multer.upload, validate.id, validate.sauce, sauceCtrl.updateSauce);
+router.put('/:id', auth, validate.id, multer.upload, validate.sauce, sauceCtrl.updateSauce);
 router.delete('/:id', auth, validate.id, sauceCtrl.deleteSauce);
 router.post('/:id/like', auth, validate.id, validate.like, sauceCtrl.likeSauce);
 
 
 module.exports = router;
+
+// Validation de l'utilisateur (auth) systèmatique 
+/* Validation systématique de l'id de la sauce avec les méthodes du CRUD
+PUT GET et DELETE  avant de lancer les controlers */
